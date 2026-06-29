@@ -6,6 +6,7 @@ import logging
 from .models import Base
 from .database import engine
 from .routes import router
+from .routes_ai import router as ai_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ app.add_middleware(
 
 # Подключаем маршруты
 app.include_router(router)
+app.include_router(ai_router)
 
 
 @app.get("/")

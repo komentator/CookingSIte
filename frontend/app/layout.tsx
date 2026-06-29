@@ -23,6 +23,7 @@ export default function RootLayout({
                   <li><a href="/" className="text-gray-600 hover:text-orange-600">Поиск</a></li>
                   <li><a href="/fridge" className="text-gray-600 hover:text-orange-600">Холодильник</a></li>
                   <li><a href="/recipes" className="text-gray-600 hover:text-orange-600">Рецепты</a></li>
+                  <li><a href="/shopping" className="text-gray-600 hover:text-orange-600">Покупки</a></li>
                 </ul>
               </div>
             </nav>
