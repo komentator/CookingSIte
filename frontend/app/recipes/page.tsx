@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { api } from '@/lib/api'
 
 export default function RecipesPage() {
   const [recipes, setRecipes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadRecipes()
@@ -13,10 +15,12 @@ export default function RecipesPage() {
 
   const loadRecipes = async () => {
     try {
+      setError(null)
       const data = await api.getRecipes()
       setRecipes(data)
     } catch (err) {
       console.error(err)
+      setError('Не удалось загрузить рецепты. Проверьте, что backend API запущен на http://localhost:8000.')
     } finally {
       setLoading(false)
     }
@@ -30,6 +34,10 @@ export default function RecipesPage() {
         <div className="text-center py-12">
           <p className="text-gray-500">Загружаю рецепты...</p>
         </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <p className="text-red-800">{error}</p>
+        </div>
       ) : recipes.length === 0 ? (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
           <p className="text-yellow-800">Рецепты еще не добавлены. Добавьте рецепты через API.</p>
@@ -37,7 +45,11 @@ export default function RecipesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recipes.map((recipe) => (
-            <div key={recipe.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <Link
+              key={recipe.id}
+              href={`/recipes/${recipe.id}`}
+              className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl hover:-translate-y-1 transition block"
+            >
               <h3 className="text-xl font-bold text-gray-900 mb-2">{recipe.title}</h3>
 
               {recipe.description && (
@@ -68,17 +80,10 @@ export default function RecipesPage() {
                 </div>
               )}
 
-              {recipe.url && (
-                <a
-                  href={recipe.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block px-4 py-2 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition"
-                >
-                  Посмотреть →
-                </a>
-              )}
-            </div>
+              <span className="inline-block px-4 py-2 bg-orange-500 text-white text-sm rounded-lg">
+                Открыть рецепт →
+              </span>
+            </Link>
           ))}
         </div>
       )}

@@ -21,7 +21,7 @@ export const api = {
     return response.json()
   },
 
-  async getRecipes(skip = 0, limit = 10) {
+  async getRecipes(skip = 0, limit = 200) {
     const response = await fetch(
       `${API_URL}/api/recipes?skip=${skip}&limit=${limit}`
     )

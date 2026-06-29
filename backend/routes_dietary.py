@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
-from . import models, schemas
-from .database import get_db
+import models, schemas
+from database import get_db
 
 router = APIRouter(prefix="/api/recipes", tags=["dietary"])
 

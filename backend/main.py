@@ -3,14 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
-from .models import Base
-from .database import engine
-from .routes import router
-from .routes_ai import router as ai_router
-from .routes_recommendations import router as recommendations_router
-from .routes_reviews import router as reviews_router
-from .routes_dietary import router as dietary_router
-from .routes_user import router as user_router
+from models import Base
+from database import engine
+from routes import router
+from routes_ai import router as ai_router
+from routes_recommendations import router as recommendations_router
+from routes_reviews import router as reviews_router
+from routes_dietary import router as dietary_router
+from routes_user import router as user_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

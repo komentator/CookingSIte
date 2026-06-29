@@ -3,17 +3,17 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from typing import List
 
-from . import models, schemas
-from .database import get_db
-from .search import RecipeSearch
-from .cache import cache
+import models, schemas
+from database import get_db
+from search import RecipeSearch
+from cache import cache
 
 router = APIRouter(prefix="/api", tags=["recipes"])
 
 
 # Рецепты
 @router.get("/recipes", response_model=List[schemas.Recipe])
-def get_recipes(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+def get_recipes(skip: int = 0, limit: int = 200, db: Session = Depends(get_db)):
     """Получить список рецептов"""
     recipes = db.query(models.Recipe).offset(skip).limit(limit).all()
     return recipes
