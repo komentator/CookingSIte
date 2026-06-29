@@ -19,11 +19,13 @@ export default function RootLayout({
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
               <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-orange-600">🍳 CookingSite</h1>
-                <ul className="flex gap-6 text-sm">
+                <ul className="flex gap-4 text-xs lg:text-sm flex-wrap">
                   <li><a href="/" className="text-gray-600 hover:text-orange-600">Главная</a></li>
-                  <li><a href="/search" className="text-gray-600 hover:text-orange-600">Поиск</a></li>
+                  <li><a href="/search" className="text-gray-600 hover:text-orange-600">🔍 Поиск</a></li>
                   <li><a href="/recommendations" className="text-gray-600 hover:text-orange-600">⭐ Рекомендации</a></li>
-                  <li><a href="/recipes" className="text-gray-600 hover:text-orange-600">Рецепты</a></li>
+                  <li><a href="/recipes" className="text-gray-600 hover:text-orange-600">📖 Рецепты</a></li>
+                  <li><a href="/favorites" className="text-gray-600 hover:text-orange-600">❤️ Избранное</a></li>
+                  <li><a href="/history" className="text-gray-600 hover:text-orange-600">📜 История</a></li>
                   <li><a href="/fridge" className="text-gray-600 hover:text-orange-600">🧊 Холодильник</a></li>
                   <li><a href="/shopping" className="text-gray-600 hover:text-orange-600">📝 Покупки</a></li>
                 </ul>

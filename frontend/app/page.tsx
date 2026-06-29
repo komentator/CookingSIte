@@ -12,33 +12,61 @@ export default function Home() {
           Введите ингредиенты, выберите время приготовления и получите идеальный рецепт
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Link
             href="/search"
             className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-6 px-8 rounded-2xl text-xl transition transform hover:scale-105"
           >
-            📋 Начать поиск
+            🔍 Поиск
+          </Link>
+
+          <Link
+            href="/recommendations"
+            className="bg-red-500 hover:bg-red-600 text-white font-bold py-6 px-8 rounded-2xl text-xl transition transform hover:scale-105"
+          >
+            ⭐ Рекомендации
           </Link>
 
           <Link
             href="/recipes"
             className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-6 px-8 rounded-2xl text-xl transition transform hover:scale-105"
           >
-            📖 Все рецепты
+            📖 Рецепты
+          </Link>
+
+          <Link
+            href="/favorites"
+            className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-6 px-8 rounded-2xl text-xl transition transform hover:scale-105"
+          >
+            ❤️ Избранное
           </Link>
 
           <Link
             href="/fridge"
             className="bg-green-500 hover:bg-green-600 text-white font-bold py-6 px-8 rounded-2xl text-xl transition transform hover:scale-105"
           >
-            🧊 Мой холодильник
+            🧊 Холодильник
           </Link>
 
           <Link
             href="/shopping"
             className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-6 px-8 rounded-2xl text-xl transition transform hover:scale-105"
           >
-            📝 Список покупок
+            📝 Покупки
+          </Link>
+
+          <Link
+            href="/history"
+            className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-6 px-8 rounded-2xl text-xl transition transform hover:scale-105"
+          >
+            📜 История
+          </Link>
+
+          <Link
+            href="/dietary"
+            className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-6 px-8 rounded-2xl text-xl transition transform hover:scale-105"
+          >
+            🍽️ Диетические
           </Link>
         </div>
 

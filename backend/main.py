@@ -10,6 +10,7 @@ from .routes_ai import router as ai_router
 from .routes_recommendations import router as recommendations_router
 from .routes_reviews import router as reviews_router
 from .routes_dietary import router as dietary_router
+from .routes_user import router as user_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ app.include_router(ai_router)
 app.include_router(recommendations_router)
 app.include_router(reviews_router)
 app.include_router(dietary_router)
+app.include_router(user_router)
 
 
 @app.get("/")

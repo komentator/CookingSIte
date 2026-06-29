@@ -107,3 +107,26 @@ class RecipeReview(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     recipe = relationship("Recipe", back_populates="reviews")
+
+
+class SearchHistory(Base):
+    __tablename__ = "search_history"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    query = Column(Text, nullable=False)
+    ingredients = Column(Text)  # JSON array as string
+    filters = Column(Text)  # JSON as string
+    results_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class FavoriteRecipe(Base):
+    __tablename__ = "favorite_recipes"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    recipe = relationship("Recipe")
