@@ -17,11 +17,19 @@ class Recipe(Base):
     cooking_time = Column(Integer)  # в минутах
     servings = Column(Integer)
     calories = Column(Integer)
+    is_vegan = Column(Boolean, default=False)
+    is_vegetarian = Column(Boolean, default=False)
+    is_gluten_free = Column(Boolean, default=False)
+    is_dairy_free = Column(Boolean, default=False)
+    is_nut_free = Column(Boolean, default=False)
+    rating = Column(Float, default=0.0)  # средняя оценка (0-5)
+    reviews_count = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     ingredients = relationship("RecipeIngredient", back_populates="recipe")
     instructions = relationship("Instruction", back_populates="recipe")
+    reviews = relationship("RecipeReview", back_populates="recipe")
 
 
 class Ingredient(Base):
@@ -86,3 +94,16 @@ class IngredientSynonym(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     ingredient = relationship("Ingredient", back_populates="synonyms")
+
+
+class RecipeReview(Base):
+    __tablename__ = "recipe_reviews"
+
+    id = Column(Integer, primary_key=True)
+    recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False)
+    user_id = Column(Integer, nullable=False)
+    rating = Column(Float, nullable=False)  # 1-5
+    comment = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    recipe = relationship("Recipe", back_populates="reviews")
