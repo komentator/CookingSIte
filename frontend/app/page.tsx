@@ -17,7 +17,14 @@ export default function Home() {
             href="/search"
             className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-6 px-8 rounded-2xl text-xl transition transform hover:scale-105"
           >
-            🔍 Поиск
+            🔍 Быстрый поиск
+          </Link>
+
+          <Link
+            href="/advanced-search"
+            className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-6 px-8 rounded-2xl text-xl transition transform hover:scale-105"
+          >
+            🔎 Расширенный
           </Link>
 
           <Link
