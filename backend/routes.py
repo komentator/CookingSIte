@@ -6,6 +6,7 @@ from typing import List
 from . import models, schemas
 from .database import get_db
 from .search import RecipeSearch
+from .cache import cache
 
 router = APIRouter(prefix="/api", tags=["recipes"])
 
@@ -56,8 +57,21 @@ def search_by_ingredients(
     db: Session = Depends(get_db),
     fuzzy: bool = Query(True, description="Использовать нечеткий поиск"),
     fuzzy_threshold: float = Query(0.7, description="Порог для нечеткого поиска (0-1)"),
+    use_cache: bool = Query(True, description="Использовать кэш результатов"),
 ):
     """Поиск рецептов по ингредиентам с поддержкой fuzzy matching"""
+
+    # Проверяем кэш
+    if use_cache:
+        cache_key = {
+            "ingredients": sorted(search.ingredients),
+            "cooking_time": search.cooking_time_max,
+            "fuzzy": fuzzy,
+            "threshold": fuzzy_threshold,
+        }
+        cached_result = cache.get("search_by_ingredients", cache_key)
+        if cached_result is not None:
+            return cached_result
 
     if fuzzy:
         # Используем улучшенный поиск с fuzzy matching
@@ -121,7 +135,24 @@ def search_by_ingredients(
 
         results['total'] = len(results['can_cook_now']) + len(results['need_buy_1_2']) + len(results['need_many'])
 
+    # Сохраняем в кэш
+    if use_cache:
+        cache.set("search_by_ingredients", cache_key, results)
+
     return results
+
+
+@router.get("/cache/stats")
+def cache_stats():
+    """Статистика кэша"""
+    return cache.stats()
+
+
+@router.delete("/cache/clear")
+def cache_clear():
+    """Очистить кэш"""
+    cache.clear()
+    return {"status": "cleared"}
 
 
 @router.get("/recipes/{recipe_id}/similar")
