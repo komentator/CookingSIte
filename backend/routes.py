@@ -5,6 +5,7 @@ from typing import List
 
 from . import models, schemas
 from .database import get_db
+from .search import RecipeSearch
 
 router = APIRouter(prefix="/api", tags=["recipes"])
 
@@ -52,36 +53,53 @@ def create_recipe(recipe: schemas.RecipeCreate, db: Session = Depends(get_db)):
 @router.post("/search/by-ingredients")
 def search_by_ingredients(
     search: schemas.RecipeSearch,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    fuzzy: bool = Query(True, description="Использовать нечеткий поиск"),
+    fuzzy_threshold: float = Query(0.7, description="Порог для нечеткого поиска (0-1)"),
 ):
-    """Поиск рецептов по ингредиентам"""
+    """Поиск рецептов по ингредиентам с поддержкой fuzzy matching"""
 
-    # Нормализуем названия ингредиентов
-    ingredient_names = [ing.lower() for ing in search.ingredients]
+    if fuzzy:
+        # Используем улучшенный поиск с fuzzy matching
+        results = RecipeSearch.search_recipes(
+            db=db,
+            ingredients=search.ingredients,
+            cooking_time_max=search.cooking_time_max,
+            servings=search.servings,
+            fuzzy_threshold=fuzzy_threshold,
+        )
+    else:
+        # Обычный поиск (точное совпадение)
+        ingredient_names = [ing.lower() for ing in search.ingredients]
+        recipes = db.query(models.Recipe).all()
 
-    # Получаем все рецепты
-    recipes = db.query(models.Recipe).all()
+        results = {
+            'can_cook_now': [],
+            'need_buy_1_2': [],
+            'need_many': [],
+            'total': 0
+        }
 
-    results = []
-    for recipe in recipes:
-        recipe_ingredients = [
-            ing.ingredient.name.lower()
-            for ing in recipe.ingredients
-            if ing.is_required
-        ]
+        for recipe in recipes:
+            recipe_ingredients = [
+                ing.ingredient.name.lower()
+                for ing in recipe.ingredients
+                if ing.is_required
+            ]
 
-        if not recipe_ingredients:
-            continue
+            if not recipe_ingredients:
+                continue
 
-        # Считаем совпадения
-        matched = set(ingredient_names) & set(recipe_ingredients)
-        total_required = len(recipe_ingredients)
-        match_percent = (len(matched) / total_required) * 100 if total_required > 0 else 0
+            matched = set(ingredient_names) & set(recipe_ingredients)
+            total_required = len(recipe_ingredients)
+            match_percent = (len(matched) / total_required) * 100 if total_required > 0 else 0
 
-        if match_percent > 0:
-            missing = list(set(recipe_ingredients) - set(ingredient_names))
-            results.append({
-                'recipe': {
+            if search.cooking_time_max and recipe.cooking_time and recipe.cooking_time > search.cooking_time_max:
+                continue
+
+            if match_percent > 0:
+                missing = list(set(recipe_ingredients) - set(ingredient_names))
+                recipe_data = {
                     'id': recipe.id,
                     'title': recipe.title,
                     'description': recipe.description,
@@ -89,31 +107,88 @@ def search_by_ingredients(
                     'servings': recipe.servings,
                     'calories': recipe.calories,
                     'url': recipe.url,
-                    'source': recipe.source
-                },
-                'match_percent': round(match_percent, 1),
-                'matched_count': len(matched),
-                'missing_count': len(missing),
-                'missing_ingredients': missing
-            })
+                    'source': recipe.source,
+                    'match_percent': round(match_percent, 1),
+                    'missing_ingredients': missing
+                }
 
-    # Фильтруем по времени приготовления если указано
-    if search.cooking_time_max:
-        results = [r for r in results if r['recipe']['cooking_time'] and r['recipe']['cooking_time'] <= search.cooking_time_max]
+                if match_percent == 100:
+                    results['can_cook_now'].append(recipe_data)
+                elif match_percent >= 50:
+                    results['need_buy_1_2'].append(recipe_data)
+                else:
+                    results['need_many'].append(recipe_data)
 
-    # Сортируем по проценту совпадения
-    results.sort(key=lambda x: x['match_percent'], reverse=True)
+        results['total'] = len(results['can_cook_now']) + len(results['need_buy_1_2']) + len(results['need_many'])
 
-    # Группируем по статусу
-    can_cook = [r for r in results if r['match_percent'] == 100]
-    need_buy = [r for r in results if 50 <= r['match_percent'] < 100]
-    need_many = [r for r in results if r['match_percent'] < 50]
+    return results
+
+
+@router.get("/recipes/{recipe_id}/similar")
+def get_similar_recipes(recipe_id: int, limit: int = Query(5), db: Session = Depends(get_db)):
+    """Получить похожие рецепты по ингредиентам"""
+    similar = RecipeSearch.find_similar_recipes(db, recipe_id, limit)
+
+    if not similar:
+        raise HTTPException(status_code=404, detail="Recipe not found or no similar recipes")
+
+    return {"recipe_id": recipe_id, "similar": similar, "count": len(similar)}
+
+
+@router.get("/search/by-calories")
+def search_by_calories(
+    min_calories: int = 0,
+    max_calories: int = 10000,
+    db: Session = Depends(get_db)
+):
+    """Поиск рецептов по калорийности"""
+    recipes = db.query(models.Recipe).filter(
+        models.Recipe.calories >= min_calories,
+        models.Recipe.calories <= max_calories,
+        models.Recipe.calories.isnot(None)
+    ).all()
 
     return {
-        'can_cook_now': can_cook,
-        'need_buy_1_2': need_buy,
-        'need_many': need_many,
-        'total': len(results)
+        "min": min_calories,
+        "max": max_calories,
+        "recipes": [
+            {
+                "id": r.id,
+                "title": r.title,
+                "calories": r.calories,
+                "cooking_time": r.cooking_time,
+                "servings": r.servings
+            }
+            for r in recipes
+        ],
+        "count": len(recipes)
+    }
+
+
+@router.get("/search/by-time")
+def search_by_time(
+    max_minutes: int,
+    db: Session = Depends(get_db)
+):
+    """Поиск рецептов по времени приготовления"""
+    recipes = db.query(models.Recipe).filter(
+        models.Recipe.cooking_time <= max_minutes,
+        models.Recipe.cooking_time.isnot(None)
+    ).order_by(models.Recipe.cooking_time).all()
+
+    return {
+        "max_minutes": max_minutes,
+        "recipes": [
+            {
+                "id": r.id,
+                "title": r.title,
+                "cooking_time": r.cooking_time,
+                "servings": r.servings,
+                "calories": r.calories
+            }
+            for r in recipes
+        ],
+        "count": len(recipes)
     }
 
 
