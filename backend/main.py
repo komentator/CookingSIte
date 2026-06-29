@@ -1,8 +1,32 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import logging
 
-app = FastAPI(title="CookingSite API")
+from .models import Base
+from .database import engine
+from .routes import router
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Creating database tables...")
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database ready")
+    yield
+    # Shutdown
+    logger.info("Shutting down...")
+
+
+app = FastAPI(
+    title="CookingSite API",
+    description="API для поиска рецептов по продуктам",
+    lifespan=lifespan
+)
 
 # CORS
 app.add_middleware(
@@ -13,10 +37,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Подключаем маршруты
+app.include_router(router)
+
 
 @app.get("/")
 async def root():
-    return {"message": "CookingSite API"}
+    return {
+        "message": "CookingSite API",
+        "docs": "/docs",
+        "version": "0.1.0"
+    }
 
 
 @app.get("/api/health")
@@ -24,28 +55,6 @@ async def health():
     return {"status": "ok"}
 
 
-# Routes для рецептов
-@app.get("/api/recipes/search")
-async def search_recipes(ingredients: list[str]):
-    """Поиск рецептов по ингредиентам"""
-    return {
-        "ingredients": ingredients,
-        "recipes": []
-    }
-
-
-@app.get("/api/recipes/{recipe_id}")
-async def get_recipe(recipe_id: int):
-    """Получить рецепт по ID"""
-    return {"id": recipe_id, "title": "Recipe"}
-
-
-@app.post("/api/fridge")
-async def add_to_fridge(ingredients: list[str]):
-    """Добавить продукты в личный холодильник"""
-    return {"added": ingredients}
-
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
