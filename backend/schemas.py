@@ -65,6 +65,7 @@ class RecipeBase(BaseModel):
     cooking_time: Optional[int] = None
     servings: Optional[int] = None
     calories: Optional[int] = None
+    category: Optional[str] = None
 
 
 class RecipeCreate(RecipeBase):

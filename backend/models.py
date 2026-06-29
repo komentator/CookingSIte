@@ -17,6 +17,7 @@ class Recipe(Base):
     cooking_time = Column(Integer)  # в минутах
     servings = Column(Integer)
     calories = Column(Integer)
+    category = Column(String(100), index=True)
     is_vegan = Column(Boolean, default=False)
     is_vegetarian = Column(Boolean, default=False)
     is_gluten_free = Column(Boolean, default=False)

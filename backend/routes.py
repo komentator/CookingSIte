@@ -13,10 +13,41 @@ router = APIRouter(prefix="/api", tags=["recipes"])
 
 # Рецепты
 @router.get("/recipes", response_model=List[schemas.Recipe])
-def get_recipes(skip: int = 0, limit: int = 200, db: Session = Depends(get_db)):
-    """Получить список рецептов"""
-    recipes = db.query(models.Recipe).offset(skip).limit(limit).all()
-    return recipes
+def get_recipes(
+    skip: int = 0,
+    limit: int = 200,
+    category: str | None = Query(None, description="Фильтр по категории"),
+    sort: str = Query("title", description="Сортировка: title|cooking_time|calories|category"),
+    db: Session = Depends(get_db),
+):
+    """Получить список рецептов (опционально фильтр по категории и сортировка)"""
+    q = db.query(models.Recipe)
+    if category:
+        q = q.filter(models.Recipe.category == category)
+
+    sort_columns = {
+        "title": models.Recipe.title,
+        "cooking_time": models.Recipe.cooking_time,
+        "calories": models.Recipe.calories,
+        "category": models.Recipe.category,
+    }
+    sort_col = sort_columns.get(sort, models.Recipe.title)
+    q = q.order_by(sort_col.asc().nullslast(), models.Recipe.title.asc())
+
+    return q.offset(skip).limit(limit).all()
+
+
+@router.get("/categories")
+def get_categories(db: Session = Depends(get_db)):
+    """Получить список категорий с количеством рецептов"""
+    rows = (
+        db.query(models.Recipe.category, func.count(models.Recipe.id))
+        .filter(models.Recipe.category.isnot(None))
+        .group_by(models.Recipe.category)
+        .order_by(func.count(models.Recipe.id).desc())
+        .all()
+    )
+    return [{"name": name, "count": count} for name, count in rows]
 
 
 @router.get("/recipes/{recipe_id}", response_model=schemas.Recipe)

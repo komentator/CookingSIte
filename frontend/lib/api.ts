@@ -21,16 +21,19 @@ export const api = {
     return response.json()
   },
 
-  async getRecipes(skip = 0, limit = 200) {
-    const response = await fetch(
-      `${API_URL}/api/recipes?skip=${skip}&limit=${limit}`
-    )
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch recipes')
-    }
-
+  async getRecipes(opts: { skip?: number; limit?: number; category?: string; sort?: string } = {}) {
+    const { skip = 0, limit = 200, category, sort = 'title' } = opts
+    const params = new URLSearchParams({ skip: String(skip), limit: String(limit), sort })
+    if (category) params.set('category', category)
+    const response = await fetch(`${API_URL}/api/recipes?${params.toString()}`)
+    if (!response.ok) throw new Error('Failed to fetch recipes')
     return response.json()
+  },
+
+  async getCategories() {
+    const response = await fetch(`${API_URL}/api/categories`)
+    if (!response.ok) throw new Error('Failed to fetch categories')
+    return response.json() as Promise<{ name: string; count: number }[]>
   },
 
   async getRecipe(id: number) {
