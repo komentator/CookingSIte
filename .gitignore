@@ -15,3 +15,6 @@ out/
 *.log
 .pytest_cache/
 venv/
+*.db
+*.sqlite
+*.sqlite3
